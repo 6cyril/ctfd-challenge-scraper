@@ -13,7 +13,6 @@ class CTFDScrapper():
     def login(self,username,password):
         self.user['username'] = username
         self.user['password'] = password
-        #self.post("/login",sel)
         token = self.__accessLoginPage()
         try_login = self.post("/login",{"name":username,"password":password,"nonce":token})
         if ("Your username or password is incorrect" in try_login.text):
@@ -21,7 +20,7 @@ class CTFDScrapper():
 
     def __accessLoginPage(self):
         page = self.get("/login")
-        token = re.findall(r"<input type=\"hidden\" name=\"nonce\" value=\"(.*?)\">",page.text)
+        token = re.findall(r".*name=\"nonce\".*value=\"(.*?)\"",page.text)
         return token[0]
 
     def get(self,path):
@@ -51,7 +50,10 @@ class CTFDScrapper():
                 os.mkdir(directory_name + "/" + chall['category'])
 
             chall_info = json.loads(self.apiGet("/challenges/"+str(chall['id'])).text)['data']
-            chall_dir = directory_name + "/" + chall['category'] + "/" + chall['name'] + " ["+str(chall['value'])+" pts]"
+            
+            chall_name = re.sub('[^A-Za-z0-9 ]', '', chall['name'] )
+            chall_dir = directory_name + "/" + chall['category'] + "/" + chall_name + " ["+str(chall['value'])+" pts]"
+           
             os.mkdir(chall_dir)
             output = open(chall_dir + "/" + "README.md",'w')
             output.write("Description:\n")
